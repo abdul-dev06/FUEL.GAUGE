@@ -1,0 +1,1143 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#131210" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FUEL.GAUGE" />
+  <title>FUEL.GAUGE</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
+
+  <!-- ============================================================
+       SETUP SCREEN (shown only on first launch)
+       ============================================================ -->
+  <div class="setup-screen" id="setupScreen" aria-hidden="true">
+
+    <div class="setup-header">
+      <div class="setup-brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>
+        </div>
+        <span class="setup-brand-name">FUEL.GAUGE</span>
+      </div>
+      <div class="setup-progress-wrap" id="setupProgressWrap">
+        <div class="setup-progress-bar" id="setupProgressBar"></div>
+      </div>
+      <div class="setup-step-label" id="setupStepLabel">STEP 1 OF 5</div>
+    </div>
+
+    <div class="setup-steps-container" id="setupStepsContainer">
+
+      <!-- STEP 1: Name -->
+      <div class="setup-step active" id="step1">
+        <div class="setup-content">
+          <div class="setup-icon"><i class="fa-solid fa-user"></i></div>
+          <h2 class="setup-title">WHAT SHOULD<br>WE CALL YOU?</h2>
+          <p class="setup-sub">We'll use this to personalize your dashboard.</p>
+          <div class="setup-fields">
+            <label class="field field-wide">
+              <span>YOUR NAME</span>
+              <input type="text" id="setupName" placeholder="e.g. Abdul" autocomplete="given-name" enterkeyhint="next" />
+            </label>
+          </div>
+        </div>
+        <div class="setup-actions">
+          <button class="primary-btn full" id="step1Next">NEXT â†’</button>
+        </div>
+        <div class="setup-cloud-link-wrap">
+          <button class="setup-cloud-link" id="setupCloudBtn">
+            <i class="fa-solid fa-cloud-arrow-down"></i>
+            Already set up? Restore from cloud
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Gender + Age + Units -->
+      <div class="setup-step" id="step2">
+        <div class="setup-content">
+          <div class="setup-icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <h2 class="setup-title">ABOUT YOU</h2>
+          <p class="setup-sub">Used to calculate your metabolic rate accurately.</p>
+          <div class="setup-fields">
+            <div class="field field-wide">
+              <span>BIOLOGICAL SEX</span>
+              <div class="seg-control" id="genderSeg">
+                <button class="seg-btn active" data-val="male">MALE</button>
+                <button class="seg-btn" data-val="female">FEMALE</button>
+              </div>
+            </div>
+            <label class="field">
+              <span>AGE <em>years</em></span>
+              <input type="number" id="setupAge" placeholder="25" min="10" max="120" inputmode="numeric" />
+            </label>
+            <div class="field">
+              <span>UNITS</span>
+              <div class="seg-control" id="unitsSeg">
+                <button class="seg-btn active" data-val="metric">METRIC</button>
+                <button class="seg-btn" data-val="imperial">IMPERIAL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="setup-actions two">
+          <button class="ghost-btn" id="step2Back">â† BACK</button>
+          <button class="primary-btn" id="step2Next">NEXT â†’</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Weight + Height -->
+      <div class="setup-step" id="step3">
+        <div class="setup-content">
+          <div class="setup-icon"><i class="fa-solid fa-weight-scale"></i></div>
+          <h2 class="setup-title">BODY<br>MEASUREMENTS</h2>
+          <p class="setup-sub">Stored only on your device, never uploaded anywhere.</p>
+          <div class="setup-fields" id="bodyFields">
+            <!-- populated by JS based on unit preference -->
+          </div>
+        </div>
+        <div class="setup-actions two">
+          <button class="ghost-btn" id="step3Back">â† BACK</button>
+          <button class="primary-btn" id="step3Next">NEXT â†’</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Activity Level -->
+      <div class="setup-step" id="step4">
+        <div class="setup-content">
+          <div class="setup-icon"><i class="fa-solid fa-fire-flame-curved"></i></div>
+          <h2 class="setup-title">ACTIVITY<br>LEVEL</h2>
+          <p class="setup-sub">Pick the one that best matches your average week.</p>
+          <div class="activity-cards" id="activityCards">
+            <button class="activity-card" data-level="1.2">
+              <div class="activity-icon"><i class="fa-solid fa-couch"></i></div>
+              <div>
+                <div class="activity-name">SEDENTARY</div>
+                <div class="activity-desc">Desk job, little to no exercise</div>
+              </div>
+              <div class="activity-mult">Ã—1.2</div>
+            </button>
+            <button class="activity-card" data-level="1.375">
+              <div class="activity-icon"><i class="fa-solid fa-person-walking"></i></div>
+              <div>
+                <div class="activity-name">LIGHT</div>
+                <div class="activity-desc">1â€“3 workouts per week</div>
+              </div>
+              <div class="activity-mult">Ã—1.4</div>
+            </button>
+            <button class="activity-card" data-level="1.55">
+              <div class="activity-icon"><i class="fa-solid fa-person-running"></i></div>
+              <div>
+                <div class="activity-name">MODERATE</div>
+                <div class="activity-desc">3â€“5 workouts per week</div>
+              </div>
+              <div class="activity-mult">Ã—1.6</div>
+            </button>
+            <button class="activity-card" data-level="1.725">
+              <div class="activity-icon"><i class="fa-solid fa-dumbbell"></i></div>
+              <div>
+                <div class="activity-name">ACTIVE</div>
+                <div class="activity-desc">6â€“7 workouts per week</div>
+              </div>
+              <div class="activity-mult">Ã—1.7</div>
+            </button>
+            <button class="activity-card" data-level="1.9">
+              <div class="activity-icon"><i class="fa-solid fa-bolt"></i></div>
+              <div>
+                <div class="activity-name">VERY ACTIVE</div>
+                <div class="activity-desc">Athlete or physical job</div>
+              </div>
+              <div class="activity-mult">Ã—1.9</div>
+            </button>
+          </div>
+        </div>
+        <div class="setup-actions two">
+          <button class="ghost-btn" id="step4Back">â† BACK</button>
+          <button class="primary-btn" id="step4Next">NEXT â†’</button>
+        </div>
+      </div>
+
+      <!-- STEP 5: Sleep target -->
+      <div class="setup-step" id="step5">
+        <div class="setup-content">
+          <div class="setup-icon"><i class="fa-solid fa-moon"></i></div>
+          <h2 class="setup-title">SLEEP<br>TARGET</h2>
+          <p class="setup-sub">How many hours per night are you aiming for?</p>
+          <div class="sleep-target-display">
+            <div class="sleep-target-value">
+              <span id="sleepTargetVal">8</span>
+              <span class="sleep-target-unit">HRS</span>
+            </div>
+            <input
+              type="range"
+              id="sleepTargetSlider"
+              min="4" max="12" step="0.25" value="8"
+              class="sleep-slider"
+              aria-label="Sleep target hours"
+            />
+            <div class="sleep-slider-ticks">
+              <span>4H</span><span>6H</span><span>8H</span><span>10H</span><span>12H</span>
+            </div>
+          </div>
+          <div class="sleep-rec">
+            <div class="sleep-rec-label">RECOMMENDED FOR ADULTS</div>
+            <div class="sleep-rec-value">7â€“9 HOURS</div>
+          </div>
+        </div>
+        <div class="setup-actions two">
+          <button class="ghost-btn" id="step5Back">â† BACK</button>
+          <button class="primary-btn" id="step5Next">NEXT â†’</button>
+        </div>
+      </div>
+
+      <!-- STEP 6: Summary -->
+      <div class="setup-step" id="step6">
+        <div class="setup-content">
+          <div class="setup-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <h2 class="setup-title">YOUR<br>TELEMETRY</h2>
+          <p class="setup-sub">Based on the Mifflin-St Jeor equation.</p>
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-label">BASAL METABOLIC RATE</div>
+              <div class="summary-value" id="summaryBMR">â€”</div>
+              <div class="summary-unit">kcal/day at complete rest</div>
+            </div>
+            <div class="summary-card summary-card--highlight">
+              <div class="summary-label">TOTAL DAILY EXPENDITURE</div>
+              <div class="summary-value" id="summaryTDEE">â€”</div>
+              <div class="summary-unit">kcal/day at your activity level</div>
+            </div>
+          </div>
+          <div class="summary-goal-row">
+            <div class="summary-goal-label">STARTING CALORIE GOAL</div>
+            <div class="summary-goal-edit">
+              <input type="number" id="summaryCalGoal" inputmode="numeric" step="50" />
+              <span class="summary-goal-unit">KCAL</span>
+            </div>
+            <p class="hint">Set to your TDEE for maintenance. Adjust anytime in settings.</p>
+          </div>
+        </div>
+        <div class="setup-actions two">
+          <button class="ghost-btn" id="step6Back">â† BACK</button>
+          <button class="primary-btn" id="step6Finish">BEGIN TRACKING â†’</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cloud restore screen (alternate to setup steps) -->
+    <div class="setup-sync-screen" id="stepSyncCloud">
+      <div class="setup-content">
+        <div class="setup-icon"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+        <h2 class="setup-title">RESTORE<br>FROM CLOUD</h2>
+        <p class="setup-sub">Enter your JSONBin.io credentials to pull your existing data.</p>
+        <div class="setup-fields">
+          <label class="field field-wide">
+            <span>MASTER KEY</span>
+            <input type="password" id="syncApiKeyInput" placeholder="$2b$10$â€¦" autocomplete="off" />
+          </label>
+          <label class="field field-wide">
+            <span>BIN ID</span>
+            <input type="text" id="syncBinIdInput" placeholder="66abc123â€¦" autocomplete="off" />
+          </label>
+        </div>
+        <p class="sync-error" id="syncRestoreError"></p>
+      </div>
+      <div class="setup-actions two">
+        <button class="ghost-btn" id="syncRestoreBack">â† BACK</button>
+        <button class="primary-btn" id="syncRestoreBtn">RESTORE â†’</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       SETTINGS SCREEN (fullscreen with push navigation)
+       ============================================================ -->
+  <div class="settings-screen" id="settingsScreen" aria-hidden="true">
+
+    <!-- Root menu -->
+    <div class="settings-view active" id="settingsRoot">
+      <div class="settings-brand-hero">
+        <button class="settings-brand-close" id="settingsClose" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="settings-brand-mark-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>
+        </div>
+        <div class="settings-brand-name-lg">FUEL.GAUGE</div>
+        <div class="settings-brand-sub-lg">YOUR PERSONAL HEALTH OS</div>
+      </div>
+
+      <!-- Profile summary card -->
+      <div class="settings-profile-card">
+        <div class="settings-avatar" id="settingsAvatar">A</div>
+        <div class="settings-profile-info">
+          <div class="settings-profile-name" id="settingsProfileName">â€”</div>
+          <div class="settings-profile-stats" id="settingsProfileStats">BMR â€” Â· TDEE â€”</div>
+        </div>
+      </div>
+
+      <div class="settings-list">
+        <div class="settings-section-label">PROFILE</div>
+        <button class="settings-item" data-nav="settingsInfo">
+          <div class="settings-item-icon"><i class="fa-solid fa-user"></i></div>
+          <div class="settings-item-text">
+            <div class="settings-item-label">MY INFO</div>
+            <div class="settings-item-sub">Age, weight, height, activity</div>
+          </div>
+          <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button class="settings-item" data-nav="settingsGoals">
+          <div class="settings-item-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="settings-item-text">
+            <div class="settings-item-label">MY GOALS</div>
+            <div class="settings-item-sub">Calories, macros, sleep target</div>
+          </div>
+          <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <div class="settings-section-label">INSIGHTS</div>
+        <button class="settings-item settings-item--featured" data-nav="settingsHealth">
+          <div class="settings-item-icon settings-item-icon--featured"><i class="fa-solid fa-heart-pulse"></i></div>
+          <div class="settings-item-text">
+            <div class="settings-item-label">MY HEALTH OVERVIEW</div>
+            <div class="settings-item-sub">Smart analysis of your patterns</div>
+          </div>
+          <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <div class="settings-section-label">APP</div>
+        <button class="settings-item" data-nav="settingsApp">
+          <div class="settings-item-icon"><i class="fa-solid fa-gear"></i></div>
+          <div class="settings-item-text">
+            <div class="settings-item-label">PREFERENCES</div>
+            <div class="settings-item-sub">Theme, data, export</div>
+          </div>
+          <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-footer" id="settingsFooter">FUEL.GAUGE Â· DATA STORED LOCALLY ON DEVICE</div>
+    </div>
+
+    <!-- My Info subview -->
+    <div class="settings-view" id="settingsInfo">
+      <header class="settings-header">
+        <button class="settings-back-btn" data-back aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18L9 12l6-6"/></svg>
+          <span>BACK</span>
+        </button>
+        <h1 class="settings-title">MY INFO</h1>
+        <div style="width:60px"></div>
+      </header>
+      <div class="settings-body">
+        <div class="settings-stat-row" id="infoStatRow">
+          <div class="settings-stat">
+            <div class="settings-stat-label">BMR</div>
+            <div class="settings-stat-value" id="infoBMR">â€”</div>
+            <div class="settings-stat-unit">kcal</div>
+          </div>
+          <div class="settings-stat-divider"></div>
+          <div class="settings-stat">
+            <div class="settings-stat-label">TDEE</div>
+            <div class="settings-stat-value" id="infoTDEE">â€”</div>
+            <div class="settings-stat-unit">kcal</div>
+          </div>
+        </div>
+        <form class="form-grid settings-form" id="infoForm">
+          <label class="field field-wide">
+            <span>NAME</span>
+            <input type="text" name="name" autocomplete="given-name" />
+          </label>
+          <div class="field field-wide">
+            <span>BIOLOGICAL SEX</span>
+            <div class="seg-control" id="infoGenderSeg">
+              <button type="button" class="seg-btn active" data-val="male">MALE</button>
+              <button type="button" class="seg-btn" data-val="female">FEMALE</button>
+            </div>
+          </div>
+          <label class="field">
+            <span>AGE <em>years</em></span>
+            <input type="number" name="age" min="10" max="120" inputmode="numeric" />
+          </label>
+          <div class="field">
+            <span>UNITS</span>
+            <div class="seg-control" id="infoUnitsSeg">
+              <button type="button" class="seg-btn active" data-val="metric">METRIC</button>
+              <button type="button" class="seg-btn" data-val="imperial">IMPERIAL</button>
+            </div>
+          </div>
+          <label class="field" id="infoWeightField">
+            <span>WEIGHT <em id="infoWeightUnit">kg</em></span>
+            <input type="number" name="weight" step="0.1" min="20" inputmode="decimal" />
+          </label>
+          <label class="field" id="infoHeightField">
+            <span>HEIGHT <em id="infoHeightUnit">cm</em></span>
+            <input type="number" name="height" step="1" min="50" inputmode="numeric" />
+          </label>
+          <div class="field field-wide hidden" id="infoHeightImperialField">
+            <span>HEIGHT</span>
+            <div class="imperial-height">
+              <label><span>FT</span><input type="number" name="heightFt" min="1" max="8" inputmode="numeric" /></label>
+              <label><span>IN</span><input type="number" name="heightIn" min="0" max="11" step="0.5" inputmode="decimal" /></label>
+            </div>
+          </div>
+          <div class="field field-wide">
+            <span>ACTIVITY LEVEL</span>
+            <select name="activityLevel" class="select-field">
+              <option value="1.2">Sedentary â€” desk job, little exercise</option>
+              <option value="1.375">Light â€” 1â€“3 workouts/week</option>
+              <option value="1.55">Moderate â€” 3â€“5 workouts/week</option>
+              <option value="1.725">Active â€” 6â€“7 workouts/week</option>
+              <option value="1.9">Very Active â€” athlete or physical job</option>
+            </select>
+          </div>
+          <div class="form-actions field-wide">
+            <button type="submit" class="primary-btn full">SAVE INFO</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- My Goals subview -->
+    <div class="settings-view" id="settingsGoals">
+      <header class="settings-header">
+        <button class="settings-back-btn" data-back aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18L9 12l6-6"/></svg>
+          <span>BACK</span>
+        </button>
+        <h1 class="settings-title">MY GOALS</h1>
+        <div style="width:60px"></div>
+      </header>
+      <div class="settings-body">
+        <div class="settings-stat-row">
+          <div class="settings-stat">
+            <div class="settings-stat-label">TDEE</div>
+            <div class="settings-stat-value" id="goalsTDEE">â€”</div>
+            <div class="settings-stat-unit">kcal estimated</div>
+          </div>
+          <div class="settings-stat-divider"></div>
+          <div class="settings-stat">
+            <div class="settings-stat-label">GOAL</div>
+            <div class="settings-stat-value" id="goalsCalDisplay">â€”</div>
+            <div class="settings-stat-unit">kcal target</div>
+          </div>
+        </div>
+        <form class="form-grid settings-form" id="goalsForm">
+          <label class="field field-wide">
+            <span>CALORIES <em>kcal/day</em></span>
+            <input type="number" name="cal" step="10" min="500" inputmode="numeric" />
+          </label>
+          <label class="field">
+            <span>PROTEIN <em>g/day</em></span>
+            <input type="number" name="protein" step="1" min="0" inputmode="numeric" />
+          </label>
+          <label class="field">
+            <span>CARBS <em>g/day</em></span>
+            <input type="number" name="carbs" step="1" min="0" inputmode="numeric" />
+          </label>
+          <label class="field field-wide">
+            <span>FAT <em>g/day</em></span>
+            <input type="number" name="fat" step="1" min="0" inputmode="numeric" />
+          </label>
+          <div class="auto-calc field-wide">
+            <button type="button" class="ghost-btn full" id="autoMacros"><i class="fa-solid fa-bolt"></i>&nbsp;AUTO-DISTRIBUTE FROM CALORIES</button>
+            <p class="hint">40% carbs Â· 30% protein Â· 30% fat</p>
+          </div>
+          <div class="auto-calc field-wide" id="setToTDEEWrap">
+            <button type="button" class="ghost-btn full" id="setToTDEE"><i class="fa-solid fa-bullseye"></i>&nbsp;SET CALORIES TO MY TDEE</button>
+            <p class="hint">Sets calorie goal to your estimated daily expenditure</p>
+          </div>
+
+          <div class="field field-wide goals-sleep-section">
+            <span><i class="fa-solid fa-moon"></i>&nbsp;SLEEP TARGET</span>
+            <div class="sleep-goal-edit">
+              <div class="sleep-goal-display">
+                <span id="goalsSleepVal">8</span><small>HRS / NIGHT</small>
+              </div>
+              <input
+                type="range"
+                id="goalsSleepSlider"
+                min="4" max="12" step="0.25" value="8"
+                class="sleep-slider"
+                aria-label="Sleep target hours"
+              />
+              <div class="sleep-slider-ticks">
+                <span>4H</span><span>6H</span><span>8H</span><span>10H</span><span>12H</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions field-wide">
+            <button type="submit" class="primary-btn full">SAVE GOALS</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Health Overview subview -->
+    <div class="settings-view" id="settingsHealth">
+      <header class="settings-header">
+        <button class="settings-back-btn" data-back aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18L9 12l6-6"/></svg>
+          <span>BACK</span>
+        </button>
+        <h1 class="settings-title">HEALTH OVERVIEW</h1>
+        <div style="width:60px"></div>
+      </header>
+      <div class="settings-body" id="healthBody">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- App / Preferences subview -->
+    <div class="settings-view" id="settingsApp">
+      <header class="settings-header">
+        <button class="settings-back-btn" data-back aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18L9 12l6-6"/></svg>
+          <span>BACK</span>
+        </button>
+        <h1 class="settings-title">PREFERENCES</h1>
+        <div style="width:60px"></div>
+      </header>
+      <div class="settings-body">
+        <div class="settings-section-label">APPEARANCE</div>
+        <div class="pref-row" style="flex-direction:column;align-items:stretch;gap:10px;">
+          <div class="pref-info">
+            <div class="pref-label">THEME</div>
+            <div class="pref-sub">Choose your interface style</div>
+          </div>
+          <div class="theme-picker" id="themePicker">
+            <button class="theme-pick-btn" data-val="dark">
+              <i class="fa-solid fa-moon"></i>Dark
+            </button>
+            <button class="theme-pick-btn" data-val="light">
+              <i class="fa-solid fa-sun"></i>Light
+            </button>
+            <button class="theme-pick-btn" data-val="forest">
+              <i class="fa-solid fa-tree"></i>Forest
+            </button>
+            <button class="theme-pick-btn" data-val="ocean">
+              <i class="fa-solid fa-water"></i>Ocean
+            </button>
+            <button class="theme-pick-btn" data-val="ember">
+              <i class="fa-solid fa-fire"></i>Ember
+            </button>
+            <button class="theme-pick-btn" data-val="rose">
+              <i class="fa-solid fa-heart"></i>Rose
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-section-label">DATA</div>
+        <button class="pref-row pref-row--btn" id="exportDataBtn">
+          <div class="pref-info">
+            <div class="pref-label">EXPORT DATA</div>
+            <div class="pref-sub">Download all your data as JSON</div>
+          </div>
+          <i class="fa-solid fa-download pref-row-icon"></i>
+        </button>
+        <button class="pref-row pref-row--btn" id="importDataBtn">
+          <div class="pref-info">
+            <div class="pref-label">IMPORT DATA</div>
+            <div class="pref-sub">Restore from a backup file</div>
+          </div>
+          <i class="fa-solid fa-upload pref-row-icon"></i>
+        </button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" />
+        <div class="settings-section-label">AI COACH</div>
+        <div class="pref-row">
+          <div class="pref-info">
+            <div class="pref-label">GROQ API KEY</div>
+            <div class="pref-sub" id="groqStatusLabel">Not configured</div>
+          </div>
+          <div class="storage-badge" id="groqBadge">OFF</div>
+        </div>
+        <button class="pref-row pref-row--btn" id="groqConfigBtn">
+          <div class="pref-info">
+            <div class="pref-label" id="groqConfigLabel">ADD KEY</div>
+            <div class="pref-sub">Free key from console.groq.com</div>
+          </div>
+          <i class="fa-solid fa-chevron-down pref-row-icon" id="groqChevron"></i>
+        </button>
+        <div class="sync-credentials-form" id="groqCredsForm" style="display:none">
+          <label class="field field-wide">
+            <span>API KEY</span>
+            <input type="password" id="settingsGroqKey" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+          </label>
+          <div class="sync-creds-actions">
+            <button type="button" class="ghost-btn" id="groqClearBtn">REMOVE</button>
+            <button type="button" class="primary-btn" id="groqSaveBtn">SAVE</button>
+          </div>
+        </div>
+
+        <div class="settings-section-label">CLOUD SYNC</div>
+        <div class="pref-row">
+          <div class="pref-info">
+            <div class="pref-label">JSONBIN.IO</div>
+            <div class="pref-sub" id="syncStatusLabel">Not configured</div>
+          </div>
+          <div class="storage-badge" id="syncBadge">OFF</div>
+        </div>
+        <button class="pref-row pref-row--btn" id="syncConfigBtn">
+          <div class="pref-info">
+            <div class="pref-label" id="syncConfigLabel">CONFIGURE SYNC</div>
+            <div class="pref-sub">API key + Bin ID from jsonbin.io</div>
+          </div>
+          <i class="fa-solid fa-chevron-down pref-row-icon"></i>
+        </button>
+        <div class="sync-credentials-form" id="syncCredsForm" style="display:none">
+          <label class="field field-wide">
+            <span>MASTER KEY</span>
+            <input type="password" id="settingsSyncKey" placeholder="$2b$10$â€¦" autocomplete="off" />
+          </label>
+          <label class="field field-wide">
+            <span>BIN ID</span>
+            <input type="text" id="settingsSyncBin" placeholder="66abc123â€¦" autocomplete="off" />
+          </label>
+          <div class="sync-creds-actions">
+            <button type="button" class="ghost-btn" id="syncClearBtn">REMOVE</button>
+            <button type="button" class="primary-btn" id="syncSaveBtn">SAVE</button>
+          </div>
+        </div>
+        <div class="settings-section-label">DANGER ZONE</div>
+        <button class="pref-row pref-row--btn pref-row--danger" id="resetDataBtn">
+          <div class="pref-info">
+            <div class="pref-label">RESET ALL DATA</div>
+            <div class="pref-sub">Wipe everything and start over</div>
+          </div>
+          <i class="fa-solid fa-trash pref-row-icon"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       MAIN APP
+       ============================================================ -->
+  <div class="app" id="mainApp">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">FUEL.GAUGE</span>
+          <span class="brand-sub">v1.0</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-btn icon-only" id="themeToggle" aria-label="Toggle theme">
+          <i class="fa-solid fa-moon  theme-icon theme-icon--moon"></i>
+          <i class="fa-solid fa-sun   theme-icon theme-icon--sun"></i>
+          <i class="fa-solid fa-tree  theme-icon theme-icon--tree"></i>
+          <i class="fa-solid fa-water theme-icon theme-icon--water"></i>
+          <i class="fa-solid fa-fire  theme-icon theme-icon--fire"></i>
+          <i class="fa-solid fa-heart theme-icon theme-icon--heart"></i>
+        </button>
+        <button class="ghost-btn icon-only" id="openSettings" aria-label="Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </header>
+
+    <nav class="date-nav" id="dateNav" aria-label="Date selector">
+      <button class="icon-btn" id="prevDay" aria-label="Previous day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18L9 12l6-6"/></svg>
+      </button>
+      <button class="date-pill" id="dateLabel">TODAY</button>
+      <div class="streak-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2s2 4 2 7a4 4 0 01-8 0c0-2 1-3 1-3s-3 2-3 6a6 6 0 0012 0c0-5-4-10-4-10z"/></svg>
+        <span id="streakCount">0</span>
+      </div>
+      <button class="icon-btn" id="nextDay" aria-label="Next day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </nav>
+
+    <div id="homeView">
+    <main class="dashboard">
+
+      <!-- GREETING -->
+      <div class="greeting-bar" id="greetingBar">
+        <div class="greeting-eyebrow">DAILY BRIEFING</div>
+        <div class="greeting-text" id="greetingText">â€”</div>
+      </div>
+
+      <!-- HERO -->
+      <section class="card hero">
+        <div class="readout-label">
+          <span>NET CALORIES</span>
+          <span class="status-led"></span>
+        </div>
+        <div class="readout-big">
+          <span id="netCal">0</span>
+          <span class="readout-unit">kcal</span>
+        </div>
+        <div class="hero-bar">
+          <div class="hero-bar-fill" id="heroBarFill"></div>
+          <div class="hero-bar-tick" style="left:25%"></div>
+          <div class="hero-bar-tick" style="left:50%"></div>
+          <div class="hero-bar-tick" style="left:75%"></div>
+        </div>
+        <div class="cal-cue" id="calCue"></div>
+        <div class="hero-stats">
+          <div>
+            <div class="stat-label"><em class="dot dot-amber"></em>GOAL</div>
+            <div class="stat-value" id="goalCal">â€”</div>
+          </div>
+          <div>
+            <div class="stat-label"><em class="dot dot-green"></em>IN</div>
+            <div class="stat-value" id="inCal">0</div>
+          </div>
+          <div>
+            <div class="stat-label"><em class="dot dot-coral"></em>OUT</div>
+            <div class="stat-value" id="outCal">0</div>
+          </div>
+          <div>
+            <div class="stat-label"><em class="dot dot-cyan"></em>LEFT</div>
+            <div class="stat-value" id="remainCal">â€”</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MACRO RINGS -->
+      <section class="rings-row">
+        <div class="ring-card card" data-macro="protein">
+          <canvas class="ring-canvas" width="160" height="160"></canvas>
+          <div class="ring-inner">
+            <div class="ring-label">PROT</div>
+            <div class="ring-value"><span data-val="protein">0</span></div>
+            <div class="ring-unit">/<span data-goal="protein">â€”</span>G</div>
+          </div>
+        </div>
+        <div class="ring-card card" data-macro="carbs">
+          <canvas class="ring-canvas" width="160" height="160"></canvas>
+          <div class="ring-inner">
+            <div class="ring-label">CARB</div>
+            <div class="ring-value"><span data-val="carbs">0</span></div>
+            <div class="ring-unit">/<span data-goal="carbs">â€”</span>G</div>
+          </div>
+        </div>
+        <div class="ring-card card" data-macro="fat">
+          <canvas class="ring-canvas" width="160" height="160"></canvas>
+          <div class="ring-inner">
+            <div class="ring-label">FAT</div>
+            <div class="ring-value"><span data-val="fat">0</span></div>
+            <div class="ring-unit">/<span data-goal="fat">â€”</span>G</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLEEP PANEL -->
+      <section class="card sleep-panel" id="sleepPanel">
+        <div class="card-head">
+          <h3 class="card-title">SLEEP CYCLE</h3>
+          <span class="card-tag" id="sleepStatus">NOT LOGGED</span>
+        </div>
+        <div class="sleep-body">
+          <div class="sleep-clock-wrap">
+            <canvas class="sleep-clock" id="sleepClockCanvas" width="200" height="200"></canvas>
+            <div class="sleep-clock-center">
+              <div class="sleep-clock-hours" id="sleepClockHours">â€”</div>
+              <div class="sleep-clock-of">OF <span id="sleepClockGoal">8</span>H</div>
+            </div>
+          </div>
+          <div class="sleep-times">
+            <div class="sleep-time">
+              <div class="sleep-time-icon"><i class="fa-solid fa-moon"></i></div>
+              <div class="sleep-time-label">BEDTIME</div>
+              <div class="sleep-time-value" id="sleepBedTime">â€”</div>
+            </div>
+            <div class="sleep-time-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="sleep-time">
+              <div class="sleep-time-icon"><i class="fa-solid fa-sun"></i></div>
+              <div class="sleep-time-label">WAKE</div>
+              <div class="sleep-time-value" id="sleepWakeTime">â€”</div>
+            </div>
+          </div>
+          <button class="sleep-edit-btn" id="sleepEditBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span id="sleepEditBtnLabel">LOG SLEEP</span>
+          </button>
+        </div>
+      </section>
+      <!-- /SLEEP PANEL -->
+
+      <!-- MACRO SPLIT -->
+      <section class="card chart-card">
+        <div class="card-head">
+          <h3 class="card-title">MACRO SPLIT</h3>
+          <span class="card-tag">TODAY</span>
+        </div>
+        <div class="chart-wrap chart-wrap--donut"><canvas id="macroChart"></canvas></div>
+        <div class="macro-legend" id="macroLegend"></div>
+      </section>
+
+      <!-- 7-DAY CHART -->
+      <section class="card chart-card">
+        <div class="card-head">
+          <h3 class="card-title">7-DAY LOG</h3>
+          <div class="legend">
+            <span><em class="dot dot-green"></em>IN</span>
+            <span><em class="dot dot-coral"></em>OUT</span>
+            <span><em class="dot dot-amber"></em>NET</span>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="weekChart"></canvas></div>
+      </section>
+
+      <!-- FOOD LIST -->
+      <section class="card entry-card">
+        <div class="card-head">
+          <h3 class="card-title">FOOD INTAKE</h3>
+          <span class="card-tag" id="foodCount">0 ENTRIES</span>
+        </div>
+        <ul class="entry-list" id="foodList"></ul>
+        <div class="empty-state" id="foodEmpty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4c0 2-2 3-2 6h-4c0-3-2-4-2-6a4 4 0 014-4z"/><path d="M10 18h4M9 22h6"/></svg>
+          <p>No food logged yet</p>
+          <p class="hint">Tap + FOOD below to start tracking</p>
+        </div>
+      </section>
+
+      <!-- EXERCISE LIST -->
+      <section class="card entry-card">
+        <div class="card-head">
+          <h3 class="card-title">CALORIES BURNED</h3>
+          <span class="card-tag" id="exerciseCount">0 ACTIVITIES</span>
+        </div>
+        <ul class="entry-list" id="exerciseList"></ul>
+        <div class="empty-state" id="exerciseEmpty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h12M9 6l-3 6 3 6M15 6l3 6-3 6"/></svg>
+          <p>No activities logged yet</p>
+          <p class="hint">Runs, lifts, off-roading â€” track it all</p>
+        </div>
+      </section>
+
+      <!-- QUOTE -->
+      <section class="card quote-box">
+        <div class="quote-tag">DAILY DIRECTIVE</div>
+        <p class="quote-text" id="quoteText">Loadingâ€¦</p>
+        <p class="quote-author" id="quoteAuthor">â€”</p>
+      </section>
+
+      <footer class="foot">
+        <span>FUEL.GAUGE</span>
+        <span id="todayLine"></span>
+      </footer>
+    </main>
+    </div><!-- #homeView -->
+
+    <!-- ============================================================
+         EXERCISES VIEW
+         ============================================================ -->
+    <div id="exercisesView" hidden>
+
+      <!-- Segment bar (hidden when viewing exercise detail) -->
+      <div class="ex-segment-bar" id="exSegmentBar">
+        <button class="ex-seg active" data-seg="strength">STRENGTH</button>
+        <button class="ex-seg" data-seg="cardio">CARDIO</button>
+      </div>
+
+      <!-- Strength accordion list -->
+      <div id="exStrengthList" class="ex-list"></div>
+      <!-- Cardio machine list -->
+      <div id="exCardioList" class="ex-list"></div>
+
+      <!-- Full-page strength exercise detail (slides in-tab) -->
+      <div id="exStrengthDetail" style="display:none">
+        <div class="ex-detail-nav-bar">
+          <button class="icon-btn" id="exDetailBackBtn" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18L9 12l6-6"/></svg>
+          </button>
+          <span class="ex-detail-nav-group" id="exDetailNavGroup"></span>
+        </div>
+        <div class="ex-strength-header">
+          <h2 id="exDetailFullName">â€”</h2>
+          <div class="ex-detail-chips" id="exDetailFullChips"></div>
+        </div>
+        <div class="ex-detail-section">
+          <div class="ex-detail-section-label">OVERVIEW</div>
+          <p class="ex-detail-text" id="exDetailFullOverview"></p>
+        </div>
+        <div class="ex-detail-section" id="exDetailFullMistakesSec">
+          <div class="ex-detail-section-label">COMMON MISTAKES</div>
+          <ul class="ex-detail-mistakes" id="exDetailFullMistakes"></ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- â•â•â•â•â•â•â•â•â•â• COACH VIEW â•â•â•â•â•â•â•â•â•â• -->
+    <div id="coachView" hidden>
+
+      <!-- No key -- prompt user to go to Settings -->
+      <div id="coachNoKey" class="coach-setup">
+        <div class="coach-setup-icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <div class="coach-setup-title">AI COACH</div>
+        <div class="coach-setup-sub">Add your free Groq API key in Settings to unlock your daily health summary and chat with your coach.</div>
+        <button class="coach-key-btn" id="coachGoSettings">OPEN SETTINGS</button>
+      </div>
+      <!-- Chat area (shown when key exists) -->
+      <div id="coachChat" class="coach-chat" hidden>
+        <div class="coach-chat-header">
+          <span class="coach-chat-title"><i class="fa-solid fa-bullhorn"></i> AI COACH</span>
+          <button id="coachKeyClear" class="coach-clear-btn" title="Disconnect">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+        <div id="coachMessages" class="coach-messages"></div>
+        <div class="coach-input-bar">
+          <textarea id="coachInput" class="coach-input" rows="1" placeholder="Ask anything about todayâ€¦"></textarea>
+          <button id="coachSend" class="coach-send-btn" aria-label="Send">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <nav class="bottom-bar">
+      <div class="fab-wrap" id="fabWrap">
+        <div class="fab-menu" id="fabMenu">
+          <button class="fab-option fab-option--exercise" id="addExerciseBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>ACTIVITY</span>
+          </button>
+          <button class="fab-option fab-option--food" id="addFoodBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>FOOD</span>
+          </button>
+        </div>
+        <button class="fab-main" id="fabMain" aria-label="Add entry">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Bottom navigation -->
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-btn active" data-tab="home" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </button>
+      <button class="nav-btn" data-tab="exercises" aria-label="Exercises">
+        <i class="fa-solid fa-dumbbell"></i>
+      </button>
+      <button class="nav-btn" data-tab="coach" aria-label="AI Coach">
+        <i class="fa-solid fa-bullhorn"></i>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ============== EXERCISE DETAIL SHEET ============== -->
+  <div class="sheet sheet--full" id="exDetailSheet" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-labelledby="exDetailName">
+      <div class="sheet-handle"></div>
+      <header class="sheet-head">
+        <div class="ex-detail-head-text">
+          <h2 id="exDetailName">â€”</h2>
+          <p class="ex-detail-subtitle" id="exDetailSubtitle"></p>
+        </div>
+        <button class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+
+      <div class="ex-detail-scroll">
+        <!-- Muscle chips (strength only) -->
+        <div id="exDetailChipsSec">
+          <div class="ex-detail-chips" id="exDetailChips"></div>
+        </div>
+
+        <!-- Overview -->
+        <div class="ex-detail-section" id="exDetailOverviewSec">
+          <div class="ex-detail-section-label">OVERVIEW</div>
+          <p class="ex-detail-text" id="exDetailOverview"></p>
+        </div>
+
+        <!-- Common mistakes (strength only) -->
+        <div class="ex-detail-section" id="exDetailMistakesSec">
+          <div class="ex-detail-section-label">COMMON MISTAKES</div>
+          <ul class="ex-detail-mistakes" id="exDetailMistakes"></ul>
+        </div>
+
+        <!-- Cal/min banner -->
+        <div class="ex-cal-banner">
+          <div class="ex-cal-rate">
+            <span class="ex-cal-number" id="exCalPerMin">â€”</span>
+            <span class="ex-cal-unit">CAL / MIN</span>
+          </div>
+          <div class="ex-cal-note" id="exCalNote"></div>
+        </div>
+
+        <!-- Log form -->
+        <div class="ex-log-form">
+          <div class="ex-log-row">
+            <label class="field">
+              <span>Duration <em>min</em></span>
+              <input type="number" id="exLogDuration" min="1" step="1" placeholder="30" inputmode="numeric">
+            </label>
+            <label class="field">
+              <span>Calories <em>kcal</em></span>
+              <input type="number" id="exLogCals" min="1" step="1" placeholder="0" inputmode="numeric">
+            </label>
+          </div>
+          <button class="primary-btn primary-btn--alt full" id="exLogBtn">LOG ACTIVITY</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== FOOD SHEET ============== -->
+  <div class="sheet sheet--full" id="foodModal" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-labelledby="foodModalTitle">
+      <div class="sheet-handle"></div>
+      <header class="sheet-head">
+        <h2 id="foodModalTitle">LOG FOOD</h2>
+        <button class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <form id="manualFoodForm" class="form-grid">
+        <label class="field field-wide"><span>Food name</span><input type="text" name="name" required placeholder="e.g. Homemade chili" /></label>
+        <label class="field"><span>Servings</span><input type="number" name="qty" required step="0.1" min="0.1" value="1" inputmode="decimal" /></label>
+        <label class="field"><span>Calories <em>per serv.</em></span><input type="number" name="cal" required step="1" min="0" placeholder="0" inputmode="numeric" /></label>
+        <label class="field"><span>Protein <em>g</em></span><input type="number" name="protein" step="0.1" min="0" value="0" inputmode="decimal" /></label>
+        <label class="field"><span>Carbs <em>g</em></span><input type="number" name="carbs" step="0.1" min="0" value="0" inputmode="decimal" /></label>
+        <label class="field field-wide"><span>Fat <em>g</em></span><input type="number" name="fat" step="0.1" min="0" value="0" inputmode="decimal" /></label>
+        <div class="form-actions field-wide"><button type="submit" class="primary-btn full">LOG FOOD</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============== EXERCISE SHEET ============== -->
+  <div class="sheet sheet--full" id="exerciseModal" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-labelledby="exModalTitle">
+      <div class="sheet-handle"></div>
+      <header class="sheet-head">
+        <h2 id="exModalTitle">LOG ACTIVITY</h2>
+        <button class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <div class="quick-pills" id="quickActivities">
+        <button type="button" data-name="Run" data-rate="11">RUN</button>
+        <button type="button" data-name="Walk" data-rate="4">WALK</button>
+        <button type="button" data-name="Cycling" data-rate="8">CYCLE</button>
+        <button type="button" data-name="Weight Training" data-rate="6">LIFT</button>
+        <button type="button" data-name="Hiking" data-rate="7">HIKE</button>
+        <button type="button" data-name="Off-roading" data-rate="5">WHEEL</button>
+      </div>
+      <form id="exerciseForm" class="form-grid">
+        <label class="field field-wide"><span>Activity</span><input type="text" name="name" required placeholder="e.g. Trail run, Deadlifts" /></label>
+        <label class="field"><span>Calories <em>burned</em></span><input type="number" name="cal" required step="1" min="1" placeholder="0" inputmode="numeric" /></label>
+        <label class="field"><span>Duration <em>min</em></span><input type="number" name="duration" step="1" min="0" placeholder="0" inputmode="numeric" /></label>
+        <div class="form-actions field-wide"><button type="submit" class="primary-btn primary-btn--alt full">LOG ACTIVITY</button></div>
+      </form>
+      <div class="sheet-cardio-link">
+        <button class="ghost-btn full" id="goToCardioBtn">
+          <i class="fa-solid fa-person-running"></i>
+          Browse cardio with cal/min estimates â†’
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== CONFIRM SHEET ============== -->
+  <div class="sheet" id="confirmSheet" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel sheet-panel--confirm" role="dialog" aria-labelledby="confirmTitle">
+      <div class="sheet-handle"></div>
+      <div class="confirm-body">
+        <div class="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        </div>
+        <h3 id="confirmTitle">Delete this entry?</h3>
+        <p id="confirmDesc">This can't be undone.</p>
+      </div>
+      <div class="confirm-actions">
+        <button class="ghost-btn full" data-close>CANCEL</button>
+        <button class="primary-btn primary-btn--danger full" id="confirmYes">DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== SLEEP EDIT SHEET ============== -->
+  <div class="sheet" id="sleepSheet" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-labelledby="sleepSheetTitle">
+      <div class="sheet-handle"></div>
+      <header class="sheet-head">
+        <h2 id="sleepSheetTitle">LOG SLEEP</h2>
+        <button class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <div class="sleep-sheet-body">
+        <div class="sleep-duration-display">
+          <div class="sleep-duration-label">DURATION</div>
+          <div class="sleep-duration-value" id="sleepDurationDisplay">â€”</div>
+          <div class="sleep-duration-vs" id="sleepDurationVs">vs <span>8</span>h goal</div>
+        </div>
+        <div class="sleep-time-pickers">
+          <label class="sleep-time-picker">
+            <span class="sleep-time-picker-label"><i class="fa-solid fa-moon"></i>&nbsp;BEDTIME</span>
+            <input type="time" id="sleepBedInput" value="23:00" />
+          </label>
+          <label class="sleep-time-picker">
+            <span class="sleep-time-picker-label"><i class="fa-solid fa-sun"></i>&nbsp;WAKE TIME</span>
+            <input type="time" id="sleepWakeInput" value="07:00" />
+          </label>
+        </div>
+        <div class="sleep-presets">
+          <button type="button" class="sleep-preset" data-bed="22:00" data-wake="06:00">22:00â†’06:00</button>
+          <button type="button" class="sleep-preset" data-bed="23:00" data-wake="07:00">23:00â†’07:00</button>
+          <button type="button" class="sleep-preset" data-bed="00:00" data-wake="08:00">00:00â†’08:00</button>
+          <button type="button" class="sleep-preset" data-bed="01:00" data-wake="09:00">01:00â†’09:00</button>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="ghost-btn full" id="sleepClearBtn">CLEAR</button>
+          <button type="button" class="primary-btn full" id="sleepSaveBtn">SAVE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="exercises-data.js"></script>
+  <script src="app.js"></script>
+  <script src="coach.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .catch((err) => console.warn('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
+
+
